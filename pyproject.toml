@@ -1,0 +1,96 @@
+[project]
+name = "qwen-code-api-py"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.12",
+    "uvicorn[standard]>=0.34.3",
+    "httpx>=0.28.1",
+]
+
+[dependency-groups]
+dev = [
+    "poethepoet>=0.40.0",
+    "pyright==1.1.408",
+    "pytest==9.0.2",
+    "pytest-asyncio>=0.25.0",
+    "ruff==0.14.14",
+    "ty==0.0.13",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["qwen_code_api"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Tasks
+
+[tool.poe.tasks.check]
+help = "Format, lint, typecheck"
+sequence = ["format", "lint", "typecheck"]
+
+## Tasks - Typecheck
+
+[tool.poe.tasks.typecheck]
+help = "Run all typecheckers"
+sequence = ["ty-check", "pyright-check"]
+
+[tool.poe.tasks.ty-check]
+help = "Run the 'ty' typechecker"
+cmd = "ty check"
+
+## Tasks - Typecheck
+
+[tool.poe.tasks.pyright-check]
+help = "Run the 'pyright' typechecker"
+cmd = "pyright"
+
+## Tasks - Lint
+
+[tool.poe.tasks.lint]
+help = "Run the 'ruff' linter"
+cmd = "ruff check"
+
+## Tasks - Format
+
+[tool.poe.tasks.format]
+help = "Run the 'ruff' formatter"
+cmd = "ruff format"
+
+# Tool configuration
+
+[tool.pyright]
+include = ["qwen_code_api"]
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.*",
+    ".venv",
+    ".direnv",
+    "nanobot/packages/**",
+]
+typeCheckingMode = "strict"
+reportAssignmentType = "none"
+reportIncompatibleVariableOverride = "none"
+reportUnknownMemberType = "none"
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+asyncio_mode = "auto"
+
+[tool.ty.src]
+include = [
+    "backend",
+    "client-telegram-bot",
+    "nanobot",
+    "mcp",
+    "qwen-code-api-py",
+]
+exclude = ["nanobot/packages/**"]
+
+# TODO: remove after upgrading to ty>=0.0.26 (fixes ParamSpec, see https://github.com/astral-sh/ty/issues/1635)
+[tool.ty.rules]
+invalid-argument-type = "warn"
