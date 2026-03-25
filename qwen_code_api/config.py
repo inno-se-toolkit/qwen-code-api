@@ -1,42 +1,67 @@
-"""Configuration loaded from environment variables."""
+"""Configuration loaded from environment variables using pydantic-settings."""
 
 import logging
-import os
 import sys
 from pathlib import Path
 
 from loguru import logger
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
-PORT = int(os.getenv("PORT", "8080"))
-HOST = os.getenv("HOST", "0.0.0.0")
 
-_raw_keys = os.getenv("QWEN_CODE_API_KEY", "")
-API_KEYS: list[str] | None = (
-    [k.strip() for k in _raw_keys.split(",") if k.strip()]
-    if _raw_keys.strip()
-    else None
-)
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
 
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "coder-model")
-MAX_RETRIES = int(os.getenv("MAX_RETRIES", "5"))
-RETRY_DELAY_S = float(os.getenv("RETRY_DELAY_MS", "1000")) / 1000
-QWEN_CODE_AUTH_USE = os.getenv("QWEN_CODE_AUTH_USE", "true").lower() != "false"
+    # Server configuration
+    port: int = Field(..., alias="PORT")
+    address: str = Field(..., alias="ADDRESS")
 
-QWEN_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-QWEN_OAUTH_TOKEN_URL = "https://chat.qwen.ai/api/v1/oauth2/token"
-QWEN_OAUTH_CLIENT_ID = "f0304373b74a44d2b584a3fb70ca9e56"
-TOKEN_REFRESH_BUFFER_S = 30
+    # API authentication
+    qwen_code_api_key: str = Field(..., alias="QWEN_CODE_API_KEY")
+    qwen_code_auth_use: bool = Field(..., alias="QWEN_CODE_AUTH_USE")
 
-QWEN_DIR = Path.home() / ".qwen"
-CREDS_FILE = QWEN_DIR / "oauth_creds.json"
+    # Model configuration
+    default_model: str = Field(..., alias="DEFAULT_MODEL")
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "error")
-LOG_REQUESTS = os.getenv("LOG_REQUESTS", "true").lower() != "false"
+    # Retry configuration
+    max_retries: int = Field(..., alias="MAX_RETRIES")
+    retry_delay_ms: int = Field(..., alias="RETRY_DELAY_MS")
 
+    # Qwen API configuration (hardcoded, not from env)
+    qwen_api_base: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    qwen_oauth_token_url: str = "https://chat.qwen.ai/api/v1/oauth2/token"
+    qwen_oauth_client_id: str = "f0304373b74a44d2b584a3fb70ca9e56"
+    token_refresh_buffer_s: int = 30
+
+    # File paths
+    qwen_dir: Path = Path.home() / ".qwen"
+    creds_file: Path = Path.home() / ".qwen" / "oauth_creds.json"
+
+    # Logging
+    log_level: str = Field(..., alias="LOG_LEVEL")
+    log_requests: bool = Field(..., alias="LOG_REQUESTS")
+
+    @property
+    def api_keys(self) -> list[str] | None:
+        """Parse API keys from comma-separated string."""
+        if not self.qwen_code_api_key:
+            return None
+        keys = [k.strip() for k in self.qwen_code_api_key.split(",") if k.strip()]
+        return keys if keys else None
+
+    @property
+    def retry_delay_s(self) -> float:
+        """Convert retry delay from milliseconds to seconds."""
+        return self.retry_delay_ms / 1000
+
+
+settings = Settings.model_validate({})
+
+# Configure logger based on settings
 logger.remove()
 logger.add(
     sys.stderr,
-    level=logging.DEBUG if LOG_LEVEL == "debug" else logging.INFO,
+    level=logging.DEBUG if settings.log_level == "debug" else logging.INFO,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
 )
 log = logger

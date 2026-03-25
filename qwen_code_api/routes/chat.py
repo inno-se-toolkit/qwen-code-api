@@ -10,7 +10,7 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from ..auth import AuthManager
-from ..config import DEFAULT_MODEL, LOG_REQUESTS, MAX_RETRIES, RETRY_DELAY_S, log
+from ..config import settings, log
 from ..headers import build_headers
 from ..models import (
     clamp_max_tokens,
@@ -43,7 +43,7 @@ async def _handle_regular(
     output_tokens = data.get("usage", {}).get("completion_tokens")
     qwen_id = data.get("id")
 
-    if LOG_REQUESTS:
+    if settings.log_requests:
         live_logger.proxy_response(
             request_id=request_id,
             status_code=resp.status_code,
@@ -71,7 +71,7 @@ async def _handle_streaming(
 
     # Log streaming start
     latency_ms = int((time.time() - start_time) * 1000)
-    if LOG_REQUESTS:
+    if settings.log_requests:
         live_logger.proxy_response(
             request_id=request_id,
             status_code=resp.status_code,
@@ -113,7 +113,7 @@ async def chat_completions(
 
     body: dict[str, Any] = await request.json()
     is_streaming: bool = body.get("stream", False)
-    model = resolve_model(body.get("model", DEFAULT_MODEL))
+    model = resolve_model(body.get("model", settings.default_model))
     max_tokens = clamp_max_tokens(model, body.get("max_tokens", 65536))
 
     # Generate request ID and log request
@@ -122,7 +122,7 @@ async def chat_completions(
     messages = body.get("messages", [])
     token_count = len(str(messages)) // 4  # Rough approximation
 
-    if LOG_REQUESTS:
+    if settings.log_requests:
         live_logger.proxy_request(
             request_id=request_id,
             model=model,
@@ -160,7 +160,7 @@ async def chat_completions(
 
     last_error: Exception | None = None
     last_status: int | None = None
-    for attempt in range(1, MAX_RETRIES + 1):
+    for attempt in range(1, settings.max_retries + 1):
         try:
             if is_streaming:
                 return await _handle_streaming(
@@ -181,7 +181,7 @@ async def chat_completions(
                 log.warning(
                     "Validation error (status %d): %s", status, error_message[:100]
                 )
-                if LOG_REQUESTS:
+                if settings.log_requests:
                     live_logger.proxy_error(
                         request_id=request_id,
                         status_code=status,
@@ -198,9 +198,11 @@ async def chat_completions(
                 )
 
             # Retry on server errors and rate limits
-            if status in (500, 429) and attempt < MAX_RETRIES:
-                log.warning("Retry %d/%d (status %d)", attempt, MAX_RETRIES, status)
-                await asyncio.sleep(RETRY_DELAY_S * attempt)
+            if status in (500, 429) and attempt < settings.max_retries:
+                log.warning(
+                    "Retry %d/%d (status %d)", attempt, settings.max_retries, status
+                )
+                await asyncio.sleep(settings.retry_delay_s * attempt)
                 continue
 
             # Auth errors trigger token refresh
@@ -223,7 +225,7 @@ async def chat_completions(
                             )
                 except Exception as refresh_err:
                     log.error("Token refresh failed: %s", str(refresh_err))
-                    if LOG_REQUESTS:
+                    if settings.log_requests:
                         live_logger.proxy_error(
                             request_id=request_id,
                             status_code=401,
@@ -248,7 +250,7 @@ async def chat_completions(
             # Check for validation errors
             if is_validation_error(error_message):
                 log.warning("Validation error: %s", error_message[:100])
-                if LOG_REQUESTS:
+                if settings.log_requests:
                     live_logger.proxy_error(
                         request_id=request_id,
                         status_code=400,
@@ -265,11 +267,14 @@ async def chat_completions(
                 )
 
             # Retry on generic errors
-            if attempt < MAX_RETRIES:
+            if attempt < settings.max_retries:
                 log.warning(
-                    "Retry %d/%d (error: %s)", attempt, MAX_RETRIES, error_message[:50]
+                    "Retry %d/%d (error: %s)",
+                    attempt,
+                    settings.max_retries,
+                    error_message[:50],
                 )
-                await asyncio.sleep(RETRY_DELAY_S * attempt)
+                await asyncio.sleep(settings.retry_delay_s * attempt)
                 continue
             break
 
@@ -277,7 +282,7 @@ async def chat_completions(
     error_msg = str(last_error) if last_error else "Unknown error"
 
     if is_validation_error(error_msg):
-        if LOG_REQUESTS:
+        if settings.log_requests:
             live_logger.proxy_error(
                 request_id=request_id,
                 status_code=400,
@@ -292,7 +297,7 @@ async def chat_completions(
         )
 
     if is_quota_error(last_status, error_msg):
-        if LOG_REQUESTS:
+        if settings.log_requests:
             live_logger.proxy_error(
                 request_id=request_id,
                 status_code=429,
@@ -309,7 +314,7 @@ async def chat_completions(
         )
 
     if is_auth_error(last_status, error_msg):
-        if LOG_REQUESTS:
+        if settings.log_requests:
             live_logger.proxy_error(
                 request_id=request_id,
                 status_code=401,
@@ -326,7 +331,7 @@ async def chat_completions(
         )
 
     # Default: generic API error
-    if LOG_REQUESTS:
+    if settings.log_requests:
         live_logger.proxy_error(
             request_id=request_id,
             status_code=500,

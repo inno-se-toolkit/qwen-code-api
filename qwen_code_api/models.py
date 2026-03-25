@@ -1,6 +1,6 @@
 """Qwen model definitions, aliases, and token limits."""
 
-from .config import DEFAULT_MODEL
+from .config import settings
 
 MODEL_ALIASES: dict[str, str] = {"qwen3.5-plus": "coder-model"}
 
@@ -90,7 +90,7 @@ MODEL_MAX_TOKENS: dict[str, int] = {
 
 
 def resolve_model(model: str) -> str:
-    return MODEL_ALIASES.get(model, model) or DEFAULT_MODEL
+    return MODEL_ALIASES.get(model, model) or settings.default_model
 
 
 def clamp_max_tokens(model: str, max_tokens: int) -> int:

@@ -7,15 +7,7 @@ from typing import Any
 import httpx
 from pydantic import BaseModel
 
-from .config import (
-    CREDS_FILE,
-    QWEN_CODE_AUTH_USE,
-    QWEN_OAUTH_CLIENT_ID,
-    QWEN_OAUTH_TOKEN_URL,
-    QWEN_API_BASE,
-    TOKEN_REFRESH_BUFFER_S,
-    log,
-)
+from .config import settings, log
 
 
 class QwenCredentials(BaseModel):
@@ -34,13 +26,13 @@ class AuthManager:
         self._refresh_lock = False
 
     def load_credentials(self) -> QwenCredentials | None:
-        if not QWEN_CODE_AUTH_USE:
+        if not settings.qwen_code_auth_use:
             return None
         if self._credentials is not None:
             return self._credentials
         try:
             self._credentials = QwenCredentials.model_validate_json(
-                CREDS_FILE.read_text()
+                settings.creds_file.read_text()
             )
             return self._credentials
         except (FileNotFoundError, ValueError):
@@ -50,7 +42,10 @@ class AuthManager:
     def is_token_valid(creds: QwenCredentials | None) -> bool:
         if not creds or not creds.access_token or not creds.expiry_date:
             return False
-        return time.time() * 1000 < creds.expiry_date - TOKEN_REFRESH_BUFFER_S * 1000
+        return (
+            time.time() * 1000
+            < creds.expiry_date - settings.token_refresh_buffer_s * 1000
+        )
 
     async def refresh_token(
         self, creds: QwenCredentials, client: httpx.AsyncClient
@@ -62,11 +57,11 @@ class AuthManager:
 
         log.info("Refreshing Qwen access token...")
         resp = await client.post(
-            QWEN_OAUTH_TOKEN_URL,
+            settings.qwen_oauth_token_url,
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": creds.refresh_token,
-                "client_id": QWEN_OAUTH_CLIENT_ID,
+                "client_id": settings.qwen_oauth_client_id,
             },
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -84,7 +79,7 @@ class AuthManager:
             resource_url=token_data.get("resource_url", creds.resource_url),
             expiry_date=int(time.time() * 1000) + int(token_data["expires_in"]) * 1000,
         )
-        CREDS_FILE.write_text(new_creds.model_dump_json(indent=2))
+        settings.creds_file.write_text(new_creds.model_dump_json(indent=2))
         self._credentials = new_creds
         log.info("Token refreshed successfully")
         return new_creds
@@ -122,4 +117,4 @@ class AuthManager:
             if not endpoint.endswith("/v1"):
                 endpoint = endpoint.rstrip("/") + "/v1"
             return endpoint
-        return QWEN_API_BASE
+        return settings.qwen_api_base
