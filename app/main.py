@@ -36,8 +36,13 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Qwen Code API (Python)", lifespan=lifespan)
+
+# Configure CORS middleware
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,  # type: ignore[arg-type]
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(chat.router)

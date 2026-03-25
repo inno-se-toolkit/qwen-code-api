@@ -1,16 +1,9 @@
 """Structured JSON logger using loguru."""
 
-import json
 import sys
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timezone
 
 from loguru import logger
-
-
-def _serialize_log(record: dict[str, Any]) -> str:
-    """Serialize log record to JSON."""
-    return json.dumps(record, default=str)
 
 
 # Configure loguru for structured JSON output
@@ -39,7 +32,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "request",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "request_id": request_id,
                 "model": model,
                 "account_id": account_id,
@@ -63,7 +58,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "response",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "request_id": request_id,
                 "status_code": status_code,
                 "account_id": account_id,
@@ -85,7 +82,9 @@ class LiveLogger:
         logger.error(
             {
                 "event": "error",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "request_id": request_id,
                 "status_code": status_code,
                 "account_id": account_id,
@@ -98,7 +97,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "auth",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "initiated",
                 "device_code": device_code,
             }
@@ -109,7 +110,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "auth",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "completed",
                 "account_id": account_id,
             }
@@ -120,7 +123,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "auth",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "refreshed",
                 "account_id": account_id,
                 "status": status,
@@ -132,7 +137,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "auth",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "added",
                 "account_id": account_id,
             }
@@ -143,7 +150,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "auth",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "removed",
                 "account_id": account_id,
             }
@@ -154,7 +163,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "server",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "started",
                 "host": host,
                 "port": port,
@@ -166,7 +177,9 @@ class LiveLogger:
         logger.info(
             {
                 "event": "server",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
                 "action": "shutdown",
                 "reason": reason,
             }
