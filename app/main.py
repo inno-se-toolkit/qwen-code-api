@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth import AuthManager
 from .config import API_KEYS, HOST, PORT, log
 from .routes import chat, health, models
+from .utils.live_logger import live_logger
 
 
 @asynccontextmanager
@@ -20,7 +21,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _app.state.request_count = 0
     _app.state.start_time = time.time()
 
-    log.info("Server started on %s:%s", HOST, PORT)
+    live_logger.server_started(host=HOST, port=PORT)
     creds = _app.state.auth.load_credentials()
     if creds:
         valid = AuthManager.is_token_valid(creds)
@@ -30,6 +31,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     yield
 
+    live_logger.shutdown("Server stopping")
     await _app.state.http_client.aclose()
 
 

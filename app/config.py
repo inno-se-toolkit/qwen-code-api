@@ -2,7 +2,10 @@
 
 import logging
 import os
+import sys
 from pathlib import Path
+
+from loguru import logger
 
 PORT = int(os.getenv("PORT", "8080"))
 HOST = os.getenv("HOST", "0.0.0.0")
@@ -28,8 +31,12 @@ QWEN_DIR = Path.home() / ".qwen"
 CREDS_FILE = QWEN_DIR / "oauth_creds.json"
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "error")
-logging.basicConfig(
+LOG_REQUESTS = os.getenv("LOG_REQUESTS", "true").lower() != "false"
+
+logger.remove()
+logger.add(
+    sys.stderr,
     level=logging.DEBUG if LOG_LEVEL == "debug" else logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
 )
-log = logging.getLogger("qwen-proxy")
+log = logger
