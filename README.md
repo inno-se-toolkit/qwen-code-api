@@ -62,13 +62,13 @@ This is a Python port of the original [qwen-code-api](https://github.com/aptdnfa
 3. **Start the Server**:
 
     ```bash
-    uv run python -m app.main
+    uv run python -m qwen_code_api.main
     ```
 
     Or with uvicorn directly:
 
     ```bash
-    uv run uvicorn app.main:app --host 0.0.0.0 --port 8080
+    uv run uvicorn qwen_code_api.main:app --host 0.0.0.0 --port 8080
     ```
 
 4. **Use the Proxy**: Point your OpenAI-compatible client to `http://localhost:8080/v1`.
