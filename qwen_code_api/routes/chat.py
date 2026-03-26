@@ -97,7 +97,7 @@ async def _handle_streaming(
     )
 
 
-@router.post("/v1/chat/completions")
+@router.post("/v1/chat/completions", response_model=None)
 async def chat_completions(
     request: Request,
     x_api_key: str | None = Header(None),
