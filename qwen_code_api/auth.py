@@ -1,6 +1,7 @@
 """Qwen OAuth credential management."""
 
 import asyncio
+import json
 import time
 from typing import Any
 
@@ -69,9 +70,23 @@ class AuthManager:
             },
         )
         if resp.status_code != 200:
-            raise RuntimeError(f"Token refresh failed: {resp.text}")
+            raise RuntimeError(
+                "Token refresh failed: "
+                f"status={resp.status_code}, "
+                f"content_type={resp.headers.get('content-type', '<missing>')}, "
+                f"body={resp.text[:500]!r}"
+            )
 
-        token_data: dict[str, Any] = resp.json()
+        try:
+            token_data: dict[str, Any] = resp.json()
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                "Token refresh returned a non-JSON response: "
+                f"status={resp.status_code}, "
+                f"content_type={resp.headers.get('content-type', '<missing>')}, "
+                f"body={resp.text[:500]!r}"
+            ) from exc
+
         new_creds = QwenCredentials(
             access_token=token_data["access_token"],
             token_type=token_data.get("token_type", ""),
