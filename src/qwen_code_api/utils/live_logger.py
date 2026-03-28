@@ -38,7 +38,7 @@ class LiveLogger:
                 "token_count": token_count,
                 "is_streaming": is_streaming,
                 "request_num": request_num,
-            }
+            },
         )
 
     def proxy_response(
@@ -66,7 +66,7 @@ class LiveLogger:
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "qwen_id": qwen_id,
-            }
+            },
         )
 
     def proxy_error(
@@ -88,7 +88,7 @@ class LiveLogger:
                 "status_code": status_code,
                 "account_id": account_id,
                 "error_message": error_message,
-            }
+            },
         )
 
     def auth_initiated(self, device_code: str) -> None:
@@ -102,7 +102,7 @@ class LiveLogger:
                 .replace("+00:00", "Z"),
                 "action": "initiated",
                 "device_code": device_code,
-            }
+            },
         )
 
     def auth_completed(self, account_id: str) -> None:
@@ -116,7 +116,7 @@ class LiveLogger:
                 .replace("+00:00", "Z"),
                 "action": "completed",
                 "account_id": account_id,
-            }
+            },
         )
 
     def account_refreshed(self, account_id: str, status: str) -> None:
@@ -131,7 +131,7 @@ class LiveLogger:
                 "action": "refreshed",
                 "account_id": account_id,
                 "status": status,
-            }
+            },
         )
 
     def account_added(self, account_id: str) -> None:
@@ -145,7 +145,7 @@ class LiveLogger:
                 .replace("+00:00", "Z"),
                 "action": "added",
                 "account_id": account_id,
-            }
+            },
         )
 
     def account_removed(self, account_id: str) -> None:
@@ -159,7 +159,7 @@ class LiveLogger:
                 .replace("+00:00", "Z"),
                 "action": "removed",
                 "account_id": account_id,
-            }
+            },
         )
 
     def server_started(self, host: str, port: int) -> None:
@@ -174,7 +174,7 @@ class LiveLogger:
                 "action": "started",
                 "host": host,
                 "port": port,
-            }
+            },
         )
 
     def shutdown(self, reason: str) -> None:
@@ -188,7 +188,7 @@ class LiveLogger:
                 .replace("+00:00", "Z"),
                 "action": "shutdown",
                 "reason": reason,
-            }
+            },
         )
 
 
