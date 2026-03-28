@@ -22,7 +22,7 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
-COPY src/qwen_code_api/ ./src/qwen_code_api/
+COPY src/qwen_code_api/ ./qwen_code_api/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
