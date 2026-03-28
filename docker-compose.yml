@@ -20,9 +20,6 @@ services:
       - QWEN_CODE_AUTH_USE=${QWEN_CODE_AUTH_USE:-true}
       - QWEN_CODE_API_KEY=${QWEN_CODE_API_KEY:-}
 
-    networks:
-      - lms-network
-
     restart: unless-stopped
 
     healthcheck:
@@ -41,8 +38,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-networks:
-  lms-network:
-    name: lms-network
-    attachable: true
