@@ -2,7 +2,7 @@
 
 A Python proxy server that exposes Qwen models through an OpenAI-compatible API endpoint. Supports tool calling, streaming, and automatic token refresh.
 
-This is a Python port of the original [qwen-code-api](https://github.com/aptdnfapt/qwen-code-api) (Node.js/TypeScript).
+This is a Python port of the original [qwen-code-oai-proxy](https://github.com/aptdnfapt/qwen-code-oai-proxy) (Node.js/JavaScript).
 
 ## Features
 
