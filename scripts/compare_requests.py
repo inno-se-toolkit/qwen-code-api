@@ -58,9 +58,9 @@ DYNAMIC_HEADERS = {
 }
 
 DYNAMIC_BODY_KEYS = {
-    "messages",              # content differs (system prompt, context)
-    "tools",                 # tool set differs (proxy forwards caller's tools)
-    "metadata",              # session/prompt IDs are random
+    "messages",  # content differs (system prompt, context)
+    "tools",  # tool set differs (proxy forwards caller's tools)
+    "metadata",  # session/prompt IDs are random
     "vl_high_resolution_images",  # vision param, no effect for text-only
 }
 
@@ -77,9 +77,12 @@ def start_mitmdump(dump_file: str, addon_file: str) -> subprocess.Popen[bytes]:
     proc: subprocess.Popen[bytes] = subprocess.Popen(
         [
             "mitmdump",
-            "--listen-port", str(MITM_PORT),
-            "-s", addon_file,
-            "--set", "console_eventlog_verbosity=error",
+            "--listen-port",
+            str(MITM_PORT),
+            "-s",
+            addon_file,
+            "--set",
+            "console_eventlog_verbosity=error",
         ],
         env=env,
         stdout=subprocess.DEVNULL,
@@ -119,11 +122,13 @@ def start_proxy(mitmproxy_ca: str) -> subprocess.Popen[bytes]:
 def send_proxy_request() -> None:
     import urllib.request
 
-    body = json.dumps({
-        "model": "coder-model",
-        "messages": [{"role": "user", "content": PROMPT}],
-        "stream": True,
-    }).encode()
+    body = json.dumps(
+        {
+            "model": "coder-model",
+            "messages": [{"role": "user", "content": PROMPT}],
+            "stream": True,
+        }
+    ).encode()
     req = urllib.request.Request(
         f"http://127.0.0.1:{PROXY_PORT}/v1/chat/completions",
         data=body,
@@ -153,7 +158,9 @@ def send_qwen_request() -> None:
             timeout=30,
         )
     except FileNotFoundError:
-        print("  Error: 'qwen' CLI not found. Install with: pnpm add -g @qwen-code/qwen-code")
+        print(
+            "  Error: 'qwen' CLI not found. Install with: pnpm add -g @qwen-code/qwen-code"
+        )
         sys.exit(1)
 
 
@@ -172,9 +179,7 @@ def read_flows(dump_file: str) -> list[CapturedFlow]:
 
 def normalize_headers(headers: dict[str, str]) -> dict[str, str]:
     return {
-        k.lower(): v
-        for k, v in headers.items()
-        if k.lower() not in DYNAMIC_HEADERS
+        k.lower(): v for k, v in headers.items() if k.lower() not in DYNAMIC_HEADERS
     }
 
 
@@ -209,7 +214,9 @@ def compare(proxy_flow: CapturedFlow, qwen_flow: CapturedFlow) -> list[str]:
                 p_last_cc = "cache_control" in pb["tools"][-1] if pb["tools"] else None
                 q_last_cc = "cache_control" in qb["tools"][-1] if qb["tools"] else None
                 if p_last_cc != q_last_cc:
-                    diffs.append(f"Body [tools] last cache_control: proxy={p_last_cc}  qwen={q_last_cc}")
+                    diffs.append(
+                        f"Body [tools] last cache_control: proxy={p_last_cc}  qwen={q_last_cc}"
+                    )
             continue
 
         pv = pb.get(k)

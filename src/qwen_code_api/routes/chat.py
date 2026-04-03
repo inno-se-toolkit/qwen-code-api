@@ -134,7 +134,7 @@ async def chat_completions(
             is_streaming=is_streaming,
         )
 
-    # Transform messages: inject system prompt + cache_control
+    # Transform messages: add cache_control
     messages = transform_messages(messages, model, streaming=is_streaming)
 
     access_token = await auth.get_valid_token(client)
