@@ -21,7 +21,10 @@ configure_logging()
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _app.state.auth = AuthManager()
-    _app.state.http_client = httpx.AsyncClient(timeout=httpx.Timeout(300, connect=10))
+    _app.state.http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(300, connect=10),
+        headers={"User-Agent": "qwen-code/0.12.2"},
+    )
     _app.state.request_count = 0
     _app.state.session_id = str(uuid.uuid4())
     _app.state.start_time = time.time()

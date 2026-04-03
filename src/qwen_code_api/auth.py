@@ -68,6 +68,7 @@ class AuthManager:
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json",
+                "User-Agent": "QwenCode/0.14.0 (linux; x64)",
             },
         )
         if resp.status_code != 200:
