@@ -1,8 +1,13 @@
 """Qwen model definitions, aliases, and token limits."""
 
+from typing import Any
+
 from .config import settings
 
-MODEL_ALIASES: dict[str, str] = {"qwen3.5-plus": "coder-model"}
+MODEL_ALIASES: dict[str, str] = {
+    "qwen3.5-plus": "coder-model",
+    "qwen3.6-plus": "coder-model",
+}
 
 
 def is_auth_error(status: int | None, message: str) -> bool:
@@ -73,6 +78,12 @@ MODELS: list[dict[str, str | int]] = [
         "created": 1754686206,
         "owned_by": "qwen",
     },
+    {
+        "id": "qwen3.6-plus",
+        "object": "model",
+        "created": 1754686206,
+        "owned_by": "qwen",
+    },
     {"id": "coder-model", "object": "model", "created": 1754686206, "owned_by": "qwen"},
     {
         "id": "vision-model",
@@ -86,7 +97,39 @@ MODEL_MAX_TOKENS: dict[str, int] = {
     "vision-model": 32768,
     "qwen3-vl-plus": 32768,
     "qwen3-vl-max": 32768,
+    "qwen3.5-plus": 65536,
+    "qwen3.6-plus": 65536,
+    "coder-model": 65536,
 }
+
+EFFORT_BUDGET_MAP: dict[str, int | None] = {
+    "low": 1024,
+    "medium": 8192,
+    "high": None,
+}
+
+
+def resolve_thinking_params(body: dict[str, Any]) -> dict[str, Any]:
+    """Map reasoning.effort to enable_thinking/thinking_budget for the Qwen API."""
+    result: dict[str, Any] = {}
+
+    if "enable_thinking" in body:
+        result["enable_thinking"] = body["enable_thinking"]
+    if "thinking_budget" in body:
+        result["thinking_budget"] = body["thinking_budget"]
+
+    reasoning = body.get("reasoning")
+    if isinstance(reasoning, dict) and "effort" in reasoning:
+        effort = reasoning["effort"]
+        if effort == "none":
+            result["enable_thinking"] = False
+        elif effort in EFFORT_BUDGET_MAP:
+            result["enable_thinking"] = True
+            budget = EFFORT_BUDGET_MAP[effort]
+            if budget is not None:
+                result["thinking_budget"] = budget
+
+    return result
 
 
 def resolve_model(model: str) -> str:

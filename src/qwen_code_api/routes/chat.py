@@ -20,8 +20,10 @@ from ..models import (
     is_validation_error,
     make_error_response,
     resolve_model,
+    resolve_thinking_params,
 )
 from ..utils.live_logger import live_logger
+from ..utils.message_transform import transform_messages
 
 router = APIRouter()
 
@@ -132,6 +134,9 @@ async def chat_completions(
             is_streaming=is_streaming,
         )
 
+    # Transform messages: inject system prompt + cache_control
+    messages = transform_messages(messages, model)
+
     access_token = await auth.get_valid_token(client)
     creds = auth.load_credentials()
     url = f"{auth.get_api_endpoint(creds)}/chat/completions"
@@ -149,10 +154,14 @@ async def chat_completions(
         "repetition_penalty",
         "tools",
         "tool_choice",
-        "reasoning",
     ):
         if field in body:
             payload[field] = body[field]
+
+    # Map reasoning.effort → enable_thinking / thinking_budget
+    thinking = resolve_thinking_params(body)
+    if thinking:
+        payload.update(thinking)
 
     if is_streaming:
         payload["stream_options"] = {"include_usage": True}
