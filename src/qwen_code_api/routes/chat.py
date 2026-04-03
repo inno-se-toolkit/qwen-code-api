@@ -135,7 +135,7 @@ async def chat_completions(
         )
 
     # Transform messages: inject system prompt + cache_control
-    messages = transform_messages(messages, model)
+    messages = transform_messages(messages, model, streaming=is_streaming)
 
     access_token = await auth.get_valid_token(client)
     creds = auth.load_credentials()
@@ -157,6 +157,12 @@ async def chat_completions(
     ):
         if field in body:
             payload[field] = body[field]
+
+    # Add cache_control to last tool when streaming (matches real client)
+    if is_streaming and payload.get("tools"):
+        tools = list(payload["tools"])
+        tools[-1] = {**tools[-1], "cache_control": {"type": "ephemeral"}}
+        payload["tools"] = tools
 
     # Map reasoning.effort → enable_thinking / thinking_budget
     thinking = resolve_thinking_params(body)
