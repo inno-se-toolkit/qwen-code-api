@@ -163,6 +163,14 @@ async def chat_completions(
     if thinking:
         payload.update(thinking)
 
+    # Add metadata matching real client: {sessionId, promptId}
+    session_id: str = request.app.state.session_id
+    turn: int = request.app.state.request_count
+    payload["metadata"] = {
+        "sessionId": session_id,
+        "promptId": f"{session_id}#0#{turn}",
+    }
+
     if is_streaming:
         payload["stream_options"] = {"include_usage": True}
 

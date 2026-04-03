@@ -1,6 +1,7 @@
 """FastAPI application assembly — lifespan, middleware, routers."""
 
 import time
+import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -22,6 +23,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _app.state.auth = AuthManager()
     _app.state.http_client = httpx.AsyncClient(timeout=httpx.Timeout(300, connect=10))
     _app.state.request_count = 0
+    _app.state.session_id = str(uuid.uuid4())
     _app.state.start_time = time.time()
 
     live_logger.server_started(host=settings.address, port=settings.port)
