@@ -145,10 +145,10 @@ async def chat_completions(
         "model": model,
         "messages": messages,
         "stream": is_streaming,
-        "temperature": body.get("temperature", 0.7),
         "max_tokens": max_tokens,
     }
     for field in (
+        "temperature",
         "top_p",
         "top_k",
         "repetition_penalty",
