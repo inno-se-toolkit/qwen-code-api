@@ -191,6 +191,49 @@ uv run pytest
 - **Authentication**: The proxy uses OAuth credentials from `~/.qwen/oauth_creds.json`. Make sure to authenticate with the Qwen CLI before starting the proxy.
 - **Token Refresh**: The proxy automatically refreshes OAuth tokens when they expire.
 
+## Updating for Newer Qwen Code Versions
+
+When a new version of Qwen Code is released, you need to update the request headers in [headers.py](src/qwen_code_api/headers.py) to match the new client. Otherwise the API may reject requests from an outdated client fingerprint.
+
+### Manual: intercept with mitmproxy
+
+1. **Install the latest Qwen Code CLI**:
+
+    ```bash
+    pnpm add -g @qwen-code/qwen-code
+    ```
+
+2. **Intercept the headers** using mitmproxy:
+
+    ```bash
+    # Terminal 1: start the proxy
+    mitmweb --listen-port 8080
+
+    # Terminal 2: run qwen through the proxy
+    HTTPS_PROXY=http://127.0.0.1:8080 NODE_TLS_REJECT_UNAUTHORIZED=0 qwen
+    ```
+
+3. **Send a chat message** in the Qwen Code CLI so it makes an API request.
+
+4. **Copy the headers** from the mitmweb UI (`http://127.0.0.1:8081`) — look for requests to `dashscope.aliyuncs.com`. The relevant headers to update are:
+
+    - `user-agent` — contains the Qwen Code version (e.g. `QwenCode/0.14.0`)
+    - `x-dashscope-useragent` — same version string
+    - `x-stainless-package-version` — OpenAI SDK version used internally
+    - `x-stainless-runtime-version` — Node.js version
+
+5. **Update** [headers.py](src/qwen_code_api/headers.py) with the new values.
+
+### With a coding agent
+
+Tell your agent:
+
+> Install the latest `@qwen-code/qwen-code` globally with pnpm, then extract the header values from the installed bundle and update `src/qwen_code_api/headers.py`:
+>
+> 1. Find the pnpm global modules dir (`pnpm root -g`), then read `@qwen-code/qwen-code/package.json` for the CLI version.
+> 2. Grep `cli.js` in that package for `VERSION4 =` to get the OpenAI SDK version (`x-stainless-package-version`).
+> 3. Update `headers.py`: set the CLI version in `user-agent` and `x-dashscope-useragent` (format: `QwenCode/<version> (linux; x64)`), set the SDK version in `x-stainless-package-version`, and set `x-stainless-runtime-version` to the output of `node --version`.
+
 ## Differences from Node.js Version
 
 This Python implementation maintains feature parity with the original Node.js version while leveraging Python's async capabilities:
