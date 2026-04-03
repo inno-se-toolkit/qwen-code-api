@@ -61,6 +61,12 @@ cmd = "pyright"
 help = "Run the 'ruff' linter"
 cmd = "ruff check"
 
+## Tasks - Compare requests
+
+[tool.poe.tasks.compare-requests]
+help = "Compare proxy requests against real Qwen Code CLI"
+cmd = "python scripts/compare_requests.py"
+
 ## Tasks - Format
 
 [tool.poe.tasks.format]
