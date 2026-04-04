@@ -19,6 +19,8 @@ services:
       - RETRY_DELAY_MS=${RETRY_DELAY_MS:-1000}
       - QWEN_CODE_AUTH_USE=${QWEN_CODE_AUTH_USE:-true}
       - QWEN_CODE_API_KEY=${QWEN_CODE_API_KEY:-}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-coder-model}
+      - LOG_REQUESTS=${LOG_REQUESTS:-true}
 
     restart: unless-stopped
 
